@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Pick N Mix</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Nathan Khadaroo-McCheyne" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+    <script src="libs/kePrint/kePrint.js"></script>
+    <link href="libs/lightable/lightable.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Pick N Mix
+## Machine Learning Fundamentals in R
+### Nathan Khadaroo-McCheyne
+### PhD student at the Cathie Marsh Institute for Social Research <br> and the Institute for Data Science &amp; Artificial Intelligence <br> Data Padawan at Open Data Manchester
+
+---
+
+
+
+---
+
+# Workshop structure:
+
+--
+
+- We'll begin by going over the libraries needed to run the examples as these can take a while to install.
+
+--
+
+- An overview of why Tidymodels is such an exciting new meta-package, and also highlight some alternatives.
+
+--
+
+- Machine learning in a nutshell
+
+--
+
+- Introducing the 🐧Palmer penguins data 🐧!
+
+--
+
+- An example of unsupervised learning: k means clustering.
+
+--
+
+- An example of classification: Predicting the sex of the penguins using logistic regression and random forests.
+
+---
+
+
+class: inverse, center, middle
+
+# Getting Started
+
+---
+
+### How to install the packages:
+
+--
+
+We'll be doing our machine learning using the [Tidymodels](https://www.tidymodels.org) environment.
+
+You can install the **Tidymodels** package from CRAN:
+
+
+```r
+# install.packages("tidymodels")
+
+library(tidymodels)
+```
+
+--
+
+We'll also be using packages from the **Tidyverse** which we can also get from CRAN:
+
+
+```r
+# install.packages("tidyverse")
+
+library(tidyverse)
+```
+---
+### How to load the data:
+
+--
+
+**First way:**  
+--
+&lt;br&gt;
+
+- Using the [palmer penguins package](https://allisonhorst.github.io/palmerpenguins/).
+
+
+```r
+install.packages("palmerpenguins")
+
+library(palmerpenguins)
+
+penguins &lt;- penguins
+```
+
+--
+
+**Second way:**  
+--
+&lt;br&gt;
+
+- Downloading it from the tidy tuesday github page:
+
+
+```r
+urlfile="https://raw.githubusercontent.com/nayfuun/webpage/master/public/post/penguins.csv"
+
+penguins&lt;-read_csv(url(urlfile))
+```
+
+--
+If you want to find out more about how to use Github check out Dr Rachel Ainsworth's [Pick N Mix session on using Github](https://vimeo.com/435771660)!
+
+---
+class: inverse, center, middle
+
+# 🌰🌰Machine Learning in a nutshell 🌰🌰
+
+---
+# What is machine learning?
+
+--
+
+- An umbrella concept for computational techniques through which the discovery of patterns in data can be automated. The boundaries of this term are disputed and it is often used interchangeably with terms such as statistical learning, pattern recognition, AI, or even statistics.
+
+--
+
+- Two main types of algorithms: supervised, and unsupervised. We will be looking at both today.
+
+--
+
+- Supervised learning involves working with data where both dependent and independent variables are known. This includes tasks such as regression and classification.
+
+--
+
+- Unsupervised learning involves searching for patterns with data that is unlabeled. This includes tasks such as clustering and principal component analysis.
+
+---
+# Machine learning in R: What is tidymodels?
+
+--
+
+- Tidymodels is a meta-package (like the tidyverse!) developped by the RStudio team.
+
+--
+
+- "The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles."
+
+--
+
+- Priority is on easy of use, consistency, and redable code (rather that speed)
+
+--
+
+- "Successor" to the widely used [caret package](), especially Parsnip.
+
+--
+
+- Emphasis is on predictive modeling (supervised learning).
+
+--
+
+- Still in development, new packages are popping up fast.
+
+---
+# Some alternatives:
+
+--
+
+**Scikit-learn:**
+
+--
+
+- This is a Python library, and (probably?) the most used software for machine learning. Until Tidymodels came along I think this library gave Python the edge over R for easy machine learning.
+
+--
+
+- The [documentation](https://scikit-learn.org/stable/) is fantastic, worth checking out for a good intro to most machine learning topics!
+
+--
+
+**mlr3:**
+
+--
+
+- The other big machine learning library in R.
+
+--
+
+- Allows for some features not currently available in Tidymodels such as spatial cross-validation (more on that later)
+
+---
+class: inverse, center, middle
+
+# 🐧🐧 Penguin time 🐧🐧
+
+---
+
+# The Palmer Penguins:
+
+![](Images/lter_penguins.png)
+
+---
+
+
+- Originally published in [Gorman KB, Williams TD, Fraser WR (2014). Ecological sexual dimorphism and environmental variability within a community of Antarctic penguins (genus Pygoscelis)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0090081).  
+
+--
+
+- Bundled into the palmerpenguins R package by Dr. Kristen Gorman, Dr. Allison Horst, and Dr. Alison Hill as an alternative to libraries such as iris or mtcars. This contains a raw data set and a cleaned data set.
+
+--
+
+- Featured as the 31st [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-28/readme.md) data set in 2020.
+
+--
+
+- You can find out more about the origins of this data set in [this post on the RStudio Education blog](https://education.rstudio.com/blog/2020/07/palmerpenguins-cran/). 
+--
+
+
+```r
+names(penguins)
+```
+
+```
+## [1] "species"           "island"            "bill_length_mm"   
+## [4] "bill_depth_mm"     "flipper_length_mm" "body_mass_g"      
+## [7] "sex"               "year"
+```
+
+--
+
+
+```r
+names(penguins_raw)
+```
+
+```
+##  [1] "studyName"           "Sample Number"       "Species"            
+##  [4] "Region"              "Island"              "Stage"              
+##  [7] "Individual ID"       "Clutch Completion"   "Date Egg"           
+## [10] "Culmen Length (mm)"  "Culmen Depth (mm)"   "Flipper Length (mm)"
+## [13] "Body Mass (g)"       "Sex"                 "Delta 15 N (o/oo)"  
+## [16] "Delta 13 C (o/oo)"   "Comments"
+```
+
+---
+
+- Let's begin by visualizing some of the variables in the data set:
+
+--
+
+
+```r
+penguins %&gt;%
+  ggplot(aes(flipper_length_mm, bill_length_mm,
+             color = sex,
+             size = body_mass_g)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~species)
+```
+
+```
+## Warning: Removed 2 rows containing missing values (geom_point).
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+---
+class: inverse, center, middle
+
+# Clustering:
+
+---
+# K-Means clustering:
+
+A popular method for clustering data is k-means clustering. 
+
+--
+
+This approach seeks to separate data in k clusters, where the within-cluster sum-of-squares is minimized: `\(\sum_{i=0}^{n}\min_{\mu_j \in C}(||x_i - \mu_j||^2)\)`
+
+--
+
+This is done in three steps:
+
+--
+
+- Step one: Choosing the initial centers, this is usually done randomly, though in some variants centers are deliberately set far away from each other (most prominently k-means++).
+
+--
+
+- Step two: Assign each point in the sample to its nearest center.
+
+--
+
+- Step three: Calculate the mean value of all points assigned to every center, this point is now the new center for that cluster.
+
+--
+
+Step two and three are iterated until some stopping condition is met (typically when the difference between the current and new centers falls below a certain threshold).
+---
+
+![](Images/Screenshot 2020-12-07 at 16.12.36.png)
+![](Images/Screenshot 2020-12-07 at 16.12.43.png)
+---
+# K-means in R:
+
+- There are many approaches to fitting a k-means model, today we will be using the [kmeans()](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/kmeans) function from the R Stats package (usually loaded as default). 
+
+--
+
+- This function uses an efficient version of the approach described above as presented in "Algorithm AS 136: A K-Means Clustering Algorithm" by [Hartigan, J. A., &amp; Wong, M. A. (1979)]().
+
+--
+
+- More generally it is important to keep in mind that there is almost always a difference between statistical methods as understood theoretically by users, and how they are implemented computationally (an excellent example of this is [Matthew Drury's blogpost](http://madrury.github.io/jekyll/update/statistics/2016/07/20/lm-in-R.html) on how r fits linear regression models).
+
+---
+
+# Preprocessing:
+
+This code creates a new tibble called penguins_scaled, which contains all the numeric variables from penguins other than the variable for year, and scales all the variables.
+
+```r
+penguins_scaled &lt;- penguins %&gt;%
+  drop_na %&gt;% 
+  select(where(is.numeric),
+         -year) %&gt;% 
+  mutate_at(colnames(.),
+            ~(scale(.) %&gt;% as.vector))
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; bill_length_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; bill_depth_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; flipper_length_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; body_mass_g &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -0.8946955 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.7795590 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.4246077 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.5676206 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -0.8215515 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1194043 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.0678666 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.5055254 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -0.6752636 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.4240910 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.4257325 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.1885721 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -1.3335592 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.0842457 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.5684290 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.9401915 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -0.8581235 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.7444004 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.7824736 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.6918109 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; -0.9312674 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.3225288 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -1.4246077 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.7228585 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+# Clustering and getting results:
+
+--
+K-means has an element of randomness so we need to set the random seed to ensure reproducibility:
+
+
+```r
+set.seed(1234)
+```
+
+--
+
+First, we fit the k means clustering using the [kmeans function](). We can then extract the results and combine it with our data-frame with the [augment function]() from the broom package:
+
+
+```r
+k_clust &lt;- penguins_scaled %&gt;%
+  kmeans(centers = 3) %&gt;%
+  augment(drop_na(penguins))
+```
+
+
+&lt;table class="table" style="font-size: 14px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; species &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; island &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; bill_length_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; bill_depth_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; flipper_length_mm &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; body_mass_g &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; sex &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; year &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .cluster &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 39.1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 18.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 181 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3750 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 39.5 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 17.4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 186 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3800 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 40.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 18.0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 195 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3250 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 36.7 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 19.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 193 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3450 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 39.3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 20.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 190 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3650 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Adelie &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Torgersen &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 38.9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 17.8 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 181 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3625 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2007 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+# Visualising results:
+
+We can then visualize the clusters. 
+
+
+```r
+k_clust %&gt;% 
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm,
+             colour = .cluster)) + 
+  geom_point() +
+  scale_colour_manual(values = c("darkorange","purple","cyan4"))
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+These look pretty similar to the species! Let's explore that further...
+---
+
+Here the color corresponds to the species of the penguin, and the number to the cluster assigned to it by our algorithm :
+
+
+```r
+k_clust %&gt;% 
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm,
+*            colour = species)) +
+* geom_text(aes(label= .cluster)) +
+  scale_colour_manual(values = c("darkorange","purple","cyan4"))
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+---
+
+We can get even closer using additional variables from the penguins_raw data-set:
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+
+---
+class: inverse, center, middle
+
+#Classification:
+
+---
+We're going to explore a simple classification task: predicting the sex of our penguins. This example is from Julia Silge's [tidy tuesday blogpost](https://juliasilge.com/blog/palmer-penguins/). 
+
+The following diagram from [Kuhn and Johnson (2019)](https://bookdown.org/max/FES/resampling.html) illustrates the kind of workflow we will be doing:
+
+![](Images/resampling.svg)
+
+--
+
+---
+
+# Preprocessing:
+
+--
+
+- First we are going to remove any penguins that have missing data for sex:
+
+
+```r
+penguins_prep &lt;- penguins %&gt;%
+  filter(!is.na(sex)) %&gt;%
+  select(-year, -island)
+```
+
+---
+
+# Much ado about sampling:
+--
+
+- First we can split our data into a testing and training sets using the [rsample package](https://rsample.tidymodels.org):
+
+--
+
+
+```r
+set.seed(123)
+
+*penguin_split &lt;- initial_split(penguins_prep, strata = sex)
+
+penguin_train &lt;- training(penguin_split)
+
+penguin_test &lt;- testing(penguin_split)
+```
+
+--
+- We will also create bootstrap re-samples of our training data using the bootstraps function from the same package.
+
+
+```r
+set.seed(123)
+
+penguin_boot &lt;- bootstraps(penguin_train)
+```
+---
+# Specifying the models:
+
+--
+- The [parsnip package](https://www.tidymodels.org/find/parsnip/) "provide a tidy, unified interface to models that can be used to try a range of models without getting bogged down in the syntactical minutiae of the underlying packages".
+
+--
+
+- We will specify two simple models, a logistic regression model using glm (part of base r), and a random forest model from the [ranger package](https://github.com/imbs-hl/ranger):
+
+
+```r
+glm_spec &lt;- logistic_reg() %&gt;%
+  set_engine("glm")
+
+rf_spec &lt;- rand_forest() %&gt;%
+  set_mode("classification") %&gt;%
+  set_engine("ranger")
+```
+--
+
+- We can also create an empty workflow object at this stage:
+
+
+```r
+penguin_wf &lt;- workflow() %&gt;%
+  add_formula(sex ~ .)
+```
+
+---
+
+# Fitting the models:
+
+We then add our models to the workflow, and fit them to *each* of the resamples.
+
+--
+
+- For the logistic regression model:
+
+
+```r
+glm_rs &lt;- penguin_wf %&gt;%
+  add_model(glm_spec) %&gt;%
+  fit_resamples(resamples = penguin_boot,
+    control = control_resamples(save_pred = TRUE))
+```
+
+--
+
+- For the random forest model:
+
+
+```r
+rf_rs &lt;- penguin_wf %&gt;%
+  add_model(rf_spec) %&gt;%
+  fit_resamples(
+    resamples = penguin_boot,
+    control = control_resamples(save_pred = TRUE))
+```
+
+---
+
+# Evaluating performance:
+
+We can then look at how our models have performed using the [collect metrics]() function:
+
+- For the logistic regression model:
+
+
+```r
+collect_metrics(glm_rs)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; .metric &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .estimator &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; std_err &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .config &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; accuracy &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8969609 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0063087 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; roc_auc &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9638741 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0036765 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+- For the random forest model:
+
+
+```r
+collect_metrics(rf_rs)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; .metric &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .estimator &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; n &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; std_err &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .config &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; accuracy &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8903000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0059459 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; roc_auc &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9585038 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0034207 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+Let's take a closer look at the performance of the logistic regression model, we can easily obtain a confusion matrix as a tidy tibble by using the [conf_mat_resampled]() function:
+
+
+```r
+glm_rs %&gt;%
+  conf_mat_resampled() %&gt;%
+  kable()
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Prediction &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; Truth &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Freq &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 40.56 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.48 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; female &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.92 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; male &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 41.36 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+---
+We can also look at these results using a Receiver Operator Characteristic (ROC) curve:
+
+
+```r
+glm_rs %&gt;%
+  collect_predictions() %&gt;%
+  group_by(id) %&gt;%
+  roc_curve(sex, .pred_female) %&gt;%
+  ggplot(aes(1 - specificity, sensitivity, color = id)) +
+  geom_abline(lty = 2, color = "gray80", size = 1.5) +
+  geom_path(show.legend = FALSE, alpha = 0.6, size = 1.2) +
+  coord_equal()
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+
+This is looking pretty good! But...
+---
+
+# Bringing back the test data:
+
+--
+
+We might be **overfitting** the data! To check that our model will perform well on new data we have to see how it performs on our testing data.
+
+--
+
+We can do this easily using the [last_fit]() function, this takes the model which performs the best on our training data, and fits it to the test data:
+
+
+```r
+penguin_final &lt;- penguin_wf %&gt;%
+  add_model(glm_spec) %&gt;%
+  last_fit(penguin_split)
+```
+
+---
+
+As with our training data, we can use [collect_metrics]() and [collect_predictions]() to look at the performance of our model:
+
+
+```r
+collect_metrics(penguin_final) %&gt;% kable()
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; .metric &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .estimator &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; .estimate &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; .config &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; accuracy &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9397590 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; roc_auc &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; binary &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.9912892 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Preprocessor1_Model1 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+```r
+collect_predictions(penguin_final) %&gt;%
+  conf_mat(sex, .pred_class)
+```
+
+```
+##           Truth
+## Prediction female male
+##     female     39    3
+##     male        2   39
+```
+
+---
+
+We can also create another ROC curve for our final fit:
+
+
+```r
+penguin_final %&gt;%
+  collect_predictions() %&gt;%
+  roc_curve(sex, .pred_female) %&gt;%
+  ggplot(aes(1 - specificity, sensitivity)) +
+  geom_abline(lty = 2, color = "gray80", size = 1.5) +
+  geom_path(show.legend = FALSE, alpha = 0.6, size = 1.2) +
+  coord_equal()
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-32-1.png)&lt;!-- --&gt;
+
+---
+
+We can use the [tidy function]() from the broom package to get the coefficients for our model:
+
+
+```r
+penguin_final$.workflow[[1]] %&gt;%
+  tidy(exponentiate = TRUE) %&gt;% 
+  kable()
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; term &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; estimate &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; std.error &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; statistic &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; p.value &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; (Intercept) &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 13.4721255 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -5.897487 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; speciesChinstrap &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0013402 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.7011363 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -3.888522 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0001009 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; speciesGentoo &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0001084 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.8909508 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -3.157970 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0015887 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; bill_length_mm &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.7788727 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1371734 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.198918 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000268 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; bill_depth_mm &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.8926607 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.3734069 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.639710 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0002729 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; flipper_length_mm &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.0732075 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0537715 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.313928 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.1888705 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; body_mass_g &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.0051047 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0010833 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.699961 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.0000026 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
+We can make a variable importance plot using the [vip package](https://koalaverse.github.io/vip/index.html) to explore which variables have had the most impact on our model's decisions:
+
+
+```r
+penguin_final %&gt;% 
+  pluck(".workflow", 1) %&gt;%   
+  pull_workflow_fit() %&gt;% 
+  vip(num_features = 20)
+```
+
+![](Pick-N-Mix_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
+
+---
+
+# Further ressources:
+
+--
+
+- ["Tidy Modeling with R"](https://www.tmwr.org) by Max Khun and Julia Silge.
+
+--
+
+- ["Supervised Machine Learning for Text Analysis in R"](https://smltar.com)  by Emil Hvitfeldt and Julia Silge.
+
+--
+
+- ["Interpretable Machine Learning: A Guide for Making Black Box Models Explainable"](https://christophm.github.io/interpretable-ml-book/) by Christoph Molnar.
+
+--
+
+- ["The Elements of Statistical Learning: Data Mining, Inference, and Prediction"](https://web.stanford.edu/~hastie/ElemStatLearn/) by Trevor Hastie, Robert Tibshirani, and Jerome H. Friedman.
+
+--
+
+- ["An Introduction to Statistical Learning: With Applications in R"](http://faculty.marshall.usc.edu/gareth-james/ISL/) by Gareth M. James, Daniela Witten, Trevor Hastie, and Robert Tibshirani.
+
+--
+
+- Julia Silge's blog. The classification part of this workshop in taken from [her blogpost about Palmer Penguins](https://juliasilge.com/blog/palmer-penguins/).
+
+---
+# Credits:
+
+--
+
+- Alison Horst is the author/maintainer for the Palmer Penguin package, she is also responsible for the penguin illustrations I have used. You can find many other of her r-related illustrations [here](https://github.com/allisonhorst/stats-illustrations).
+
+--
+
+- Julia Silge is a research software engineer at R Studio and one of the developers of tidymodels.
+
+--
+---
+class: inverse, center, middle
+
+# Thanks!
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
