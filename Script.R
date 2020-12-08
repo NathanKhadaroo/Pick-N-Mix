@@ -6,16 +6,22 @@ library(tidymodels)
 library(palmerpenguins)
 library(ggplot2); theme_set(theme_minimal())
 library(ranger)
-library(kableExtra)
 library(vip)
 
 
 # Loading the data: -------------------------------------------------------
 
+# From the Palmer penguins package:
+
 penguins <- penguins
 
 penguins_raw <- penguins_raw
 
+# From tidy Tuesday github:
+
+url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-28/penguins.csv"
+
+#penguins <- read_csv(url)
 
 # Exploring the data: -----------------------------------------------------
 
@@ -104,6 +110,52 @@ penguins_raw %>%
   scale_colour_manual(values = c("darkorange","purple","cyan4"))
 
 
+# Choosing the amount of clusters: ----------------------------------------
+
+
+# Setting the random seed for reproducibility:
+
+set.seed(1234)
+
+# Fitting 9 different models with k = 1 to k = 9
+
+kclusts <- 
+  tibble(k = 1:9) %>%
+  mutate(
+    kclust = map(k, ~kmeans(penguins_scaled, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, penguins_scaled))
+
+# Using broom to extract information about the models:
+
+clusters <- 
+  kclusts %>%
+  unnest(cols = c(tidied))
+
+assignments <- 
+  kclusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings <- 
+  kclusts %>%
+  unnest(cols = c(glanced))
+
+
+# Visualizing results: ----------------------------------------------------
+
+# Clusters:
+
+ggplot(assignments, aes(x = bill_length_mm , y = bill_depth_mm)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) + 
+  facet_wrap(~ k) 
+
+# Elbow plot:
+
+ggplot(clusterings, aes(k, tot.withinss)) +
+  geom_line() +
+  geom_point()
+
 # Classification: ---------------------------------------------------------
 
 
@@ -111,6 +163,7 @@ penguins_raw %>%
 
 penguins_prep <- penguins %>%
   filter(!is.na(sex)) %>%
+  mutate(sex = as.factor(sex)) %>% 
   select(-year, -island)
 
 
@@ -165,6 +218,7 @@ glm_rs <- penguin_wf %>%
   add_model(glm_spec) %>%
   fit_resamples(resamples = penguin_boot,
                 control = control_resamples(save_pred = TRUE))
+
 
 # Fitting random forest model:
 

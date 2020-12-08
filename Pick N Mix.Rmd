@@ -87,6 +87,16 @@ We'll also be using packages from the **Tidyverse** which we can also get from C
 
 library(tidyverse)
 ```
+
+--
+
+We will also be using the ranger package to fit random forests, and the vip package for variable importance plots:
+
+```{r eval=FALSE, tidy=FALSE}
+library(ranger)
+library(vip)
+```
+
 ---
 ### How to load the data:
 
@@ -113,13 +123,14 @@ penguins <- penguins
 --
 <br>
 
-- Downloading it from the tidy tuesday github page:
+- Downloading it from the tidy Tuesday github page:
 
 ```{r, eval=FALSE}
 
-urlfile="https://raw.githubusercontent.com/nayfuun/webpage/master/public/post/penguins.csv"
+url = "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-28/penguins.csv"
 
-penguins<-read_csv(url(urlfile))
+#penguins <- read_csv(url)
+
 ```
 
 --
@@ -154,27 +165,27 @@ class: inverse, center, middle
 
 --
 
-- Tidymodels is a meta-package (like the tidyverse!) developped by the RStudio team.
+- Tidymodels is a meta-package (like the tidyverse!) developed by the RStudio team.
 
 --
 
-- "The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles."
+- "The tidymodels framework is a collection of packages for modelling and machine learning using tidyverse principles."
 
 --
 
-- Priority is on easy of use, consistency, and redable code (rather that speed)
+- Priority is on ease of use, consistency, and readable code (rather that speed).
 
 --
 
-- "Successor" to the widely used [caret package](), especially Parsnip.
+- "Successor" to the widely used [caret package](http://topepo.github.io/caret/index.html), especially Parsnip.
 
 --
 
-- Emphasis is on predictive modeling (supervised learning).
+- Emphasis is on predictive modelling (supervised learning).
 
 --
 
-- Still in development, new packages are popping up fast.
+- Still in development, and new packages are popping up fast.
 
 ---
 # Some alternatives:
@@ -250,6 +261,7 @@ names(penguins_raw)
 
 ```{r, tidy=FALSE, message = FALSE, fig.width = 17, fig.height = 8}
 penguins %>%
+  filter(!is.na(sex)) %>%
   ggplot(aes(flipper_length_mm, bill_length_mm,
              color = sex,
              size = body_mass_g)) +
@@ -277,19 +289,19 @@ This is done in three steps:
 
 --
 
-- Step one: Choosing the initial centers, this is usually done randomly, though in some variants centers are deliberately set far away from each other (most prominently k-means++).
+- Step one: Choosing the initial centres, this is usually done randomly, though in some variants centres are deliberately set far away from each other (most prominently k-means++).
 
 --
 
-- Step two: Assign each point in the sample to its nearest center.
+- Step two: Assign each point in the sample to its nearest centre.
 
 --
 
-- Step three: Calculate the mean value of all points assigned to every center, this point is now the new center for that cluster.
+- Step three: Calculate the mean value of all points assigned to every centre, this point is now the new centre for that cluster.
 
 --
 
-Step two and three are iterated until some stopping condition is met (typically when the difference between the current and new centers falls below a certain threshold).
+Step two and three are iterated until some stopping condition is met (typically when the difference between the current and new centres falls below a certain threshold).
 ---
 
 ![](Images/Screenshot 2020-12-07 at 16.12.36.png)
@@ -305,7 +317,7 @@ Step two and three are iterated until some stopping condition is met (typically 
 
 --
 
-- More generally it is important to keep in mind that there is almost always a difference between statistical methods as understood theoretically by users, and how they are implemented computationally (an excellent example of this is [Matthew Drury's blogpost](http://madrury.github.io/jekyll/update/statistics/2016/07/20/lm-in-R.html) on how r fits linear regression models).
+- More generally it is important to keep in mind that there is almost always a difference between statistical methods as understood theoretically by users, and how they are implemented computationally (an excellent example of this is [Matthew Drury's blogpost](http://madrury.github.io/jekyll/update/statistics/2016/07/20/lm-in-R.html) on how R fits linear regression models).
 
 ---
 
@@ -414,6 +426,66 @@ penguins_raw %>%
 ```
 
 ---
+# Choosing the number of clusters:
+
+First we can fit 9 different models with k = 1 to k = 9.
+
+```{r}
+
+# Setting the random seed:
+
+set.seed(1234)
+
+# Fitting the models:
+
+kclusts <- 
+  tibble(k = 1:9) %>%
+  mutate(
+    kclust = map(k, ~kmeans(penguins_scaled, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, penguins_scaled))
+```
+
+---
+
+Then extract information on each model using broom:
+
+
+```{r}
+clusters <- 
+  kclusts %>%
+  unnest(cols = c(tidied))
+
+assignments <- 
+  kclusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings <- 
+  kclusts %>%
+  unnest(cols = c(glanced))
+```
+
+---
+
+As before we can look at the results using ggplot:
+
+```{r, fig.width = 14}
+ggplot(assignments, aes(x = bill_length_mm , y = bill_depth_mm)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) + 
+  facet_wrap(~ k)
+```
+
+---
+
+We can also draw an "elbow plot":
+
+```{r, fig.width = 14}
+ggplot(clusterings, aes(k, tot.withinss)) +
+  geom_line() +
+  geom_point()
+```
+
 
 ---
 class: inverse, center, middle
@@ -475,7 +547,7 @@ penguin_boot <- bootstraps(penguin_train)
 # Specifying the models:
 
 --
-- The [parsnip package](https://www.tidymodels.org/find/parsnip/) "provide a tidy, unified interface to models that can be used to try a range of models without getting bogged down in the syntactical minutiae of the underlying packages".
+- The [parsnip package](https://www.tidymodels.org/find/parsnip/) "provide[s] a tidy, unified interface to models that can be used to try a range of models without getting bogged down in the syntactical minutiae of the underlying packages".
 
 --
 
@@ -533,7 +605,9 @@ rf_rs <- penguin_wf %>%
 
 # Evaluating performance:
 
-We can then look at how our models have performed using the [collect metrics]() function:
+We can then look at how our models have performed using the [collect_metrics](https://tune.tidymodels.org/reference/collect_predictions.html) function from the [tune package](https://tune.tidymodels.org/index.html):
+
+--
 
 - For the logistic regression model:
 
@@ -545,6 +619,8 @@ collect_metrics(glm_rs)
 collect_metrics(glm_rs) %>%
   kable()
 ```
+
+--
 
 - For the random forest model:
 
@@ -654,7 +730,7 @@ penguin_final %>%
 
 ---
 
-# Further ressources:
+# Further resources:
 
 --
 
@@ -682,7 +758,7 @@ penguin_final %>%
 
 --
 
-- the [fairmodels package](https://modeloriented.github.io/fairmodels/index.html)
+- The [fairmodels package](https://modeloriented.github.io/fairmodels/index.html)
 
 ---
 # Credits:
