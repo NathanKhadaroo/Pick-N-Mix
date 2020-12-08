@@ -635,7 +635,7 @@ collect_metrics(rf_rs) %>%
 
 ---
 
-Let's take a closer look at the performance of the logistic regression model, we can easily obtain a confusion matrix as a tidy tibble by using the [conf_mat_resampled]() function:
+Let's take a closer look at the performance of the logistic regression model, we can easily obtain a confusion matrix as a tidy tibble by using the [conf_mat_resampled](https://tune.tidymodels.org/reference/conf_mat_resampled.html) function. This gives us teh *average* confusion matrix over our 25 bootstraps:
 
 ```{r, tidy= FALSE}
 glm_rs %>%
@@ -665,11 +665,11 @@ This is looking pretty good! But...
 
 --
 
-We might be **overfitting** the data! To check that our model will perform well on new data we have to see how it performs on our testing data.
+We might be **over-fitting** the data! To check that our model will perform well on new data we have to see how it performs on our testing data.
 
 --
 
-We can do this easily using the [last_fit]() function, this takes the model which performs the best on our training data, and fits it to the test data:
+We can do this easily using the [last_fit](https://tune.tidymodels.org/reference/last_fit.html) function, this takes the model which performs the best on our training data, and fits it to the test data:
 
 ```{r}
 penguin_final <- penguin_wf %>%
@@ -679,7 +679,7 @@ penguin_final <- penguin_wf %>%
 
 ---
 
-As with our training data, we can use [collect_metrics]() and [collect_predictions]() to look at the performance of our model:
+As with our training data, we can use [collect_metrics](https://tune.tidymodels.org/reference/collect_predictions.html) and [collect_predictions](https://tune.tidymodels.org/reference/collect_predictions.html) to look at the performance of our model:
 
 ```{r}
 collect_metrics(penguin_final) %>% kable()
@@ -708,7 +708,7 @@ penguin_final %>%
 
 ---
 
-We can use the [tidy function]() from the broom package to get the coefficients for our model:
+We can use the [tidy function](https://broom.tidymodels.org/index.html) from the broom package to get the coefficients for our model:
 
 ```{r}
 penguin_final$.workflow[[1]] %>%
