@@ -19,7 +19,7 @@ penguins_raw <- penguins_raw
 
 # Exploring the data: -----------------------------------------------------
 
-# Looking at summarry statistics:
+# Looking at summary statistics:
 
 summary(penguins)
 
@@ -161,11 +161,10 @@ penguin_wf <- workflow() %>%
 
 # Fitting logistic regression model:
 
-rf_rs <- penguin_wf %>%
-  add_model(rf_spec) %>%
-  fit_resamples(
-    resamples = penguin_boot,
-    control = control_resamples(save_pred = TRUE))
+glm_rs <- penguin_wf %>%
+  add_model(glm_spec) %>%
+  fit_resamples(resamples = penguin_boot,
+                control = control_resamples(save_pred = TRUE))
 
 # Fitting random forest model:
 
